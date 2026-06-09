@@ -1,12 +1,12 @@
-export default function Platform({ theme }) {
+export default function TracksGrants({ theme }) {
   const T = theme || { bg: "#05050A", a: "#D4A843", text: "#F5F0E8", muted: "rgba(212,168,67,.45)", border: "rgba(212,168,67,.15)", inputBg: "rgba(212,168,67,.06)" };
   return (
     <div style={{ background: T.bg, minHeight: "100vh", color: T.text, fontFamily: "Georgia,serif", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: 32 }}>
-      <div style={{ fontSize: 48 }}>⚡</div>
-      <div style={{ fontFamily: "monospace", fontSize: 10, letterSpacing: ".45em", color: T.muted }}>VEDD TECHNOLOGIES</div>
-      <div style={{ fontFamily: "Georgia,serif", fontSize: 28, fontWeight: 700, color: T.a, textAlign: "center" }}>BYT Platform</div>
-      <div style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontSize: 14, color: T.muted, textAlign: "center", maxWidth: 400, lineHeight: 1.7 }}>
-        Be Ye Transformed — Financial literacy education, powered by community and Web3.
+      <div style={{ fontSize: 48 }}>📋</div>
+      <div style={{ fontFamily: "monospace", fontSize: 10, letterSpacing: ".4em", color: T.muted }}>BYT ACADEMY</div>
+      <div style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: T.a, textAlign: "center" }}>Tracks & Grants</div>
+      <div style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontSize: 14, color: T.muted, textAlign: "center", maxWidth: 420, lineHeight: 1.7 }}>
+        5 additional ambassador tracks plus the AI-powered grant writer — helping communities access millions in funding.
       </div>
       <div style={{ marginTop: 8, padding: "10px 24px", background: T.inputBg, border: `1px solid ${T.border}`, fontFamily: "monospace", fontSize: 9, color: T.a, letterSpacing: ".2em" }}>
         COMING SOON
