@@ -49,7 +49,7 @@ export default function App() {
   }
 
   const pages = {
-    platform: <Platform theme={T} />,
+    platform: <Platform theme={T} setTab={setTab} />,
     modules:  <DeepModules theme={T} />,
     certs:    <CertHub theme={T} />,
     grants:   <TracksGrants theme={T} />,
