@@ -184,12 +184,132 @@ export default function App() {
       </div>
 
       <style>{`
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.5)} }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+        /* ── Base resets ── */
         *{box-sizing:border-box;margin:0;padding:0;}
         body{overflow-x:hidden;}
         ::-webkit-scrollbar{width:3px;height:3px;}
         ::-webkit-scrollbar-thumb{background:rgba(128,128,128,.2);}
+
+        /* ── Core keyframes ── */
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeInLeft{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes fadeInRight{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes fadeInScale{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+        @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+        @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+        @keyframes floatX{0%,100%{transform:translateX(0)}50%{transform:translateX(8px)}}
+        @keyframes rotateSlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes popIn{0%{opacity:0;transform:scale(.7)}70%{transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes barFill{from{width:0}to{width:var(--w,100%)}}
+        @keyframes dotBlink{0%,100%{opacity:1}50%{opacity:.2}}
+        @keyframes orbFloat{0%,100%{transform:translate(0,0)}33%{transform:translate(20px,-30px)}66%{transform:translate(-15px,15px)}}
+        @keyframes glowPulse{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 30px 4px rgba(212,168,67,.25)}}
+        @keyframes tabUnderline{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+        @keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes scanLine{0%{top:-100%}100%{top:200%}}
+
+        /* ── Page entrance ── */
+        .pg-enter{animation:fadeIn .3s cubic-bezier(.22,1,.36,1) both}
+        .pg-enter-scale{animation:fadeInScale .3s cubic-bezier(.22,1,.36,1) both}
+
+        /* ── Stagger helpers ── */
+        .s0{animation-delay:0ms}
+        .s1{animation-delay:60ms}
+        .s2{animation-delay:120ms}
+        .s3{animation-delay:180ms}
+        .s4{animation-delay:240ms}
+        .s5{animation-delay:300ms}
+        .s6{animation-delay:360ms}
+        .s7{animation-delay:420ms}
+        .s8{animation-delay:480ms}
+        .s9{animation-delay:540ms}
+
+        /* ── Card interactions ── */
+        .card-hover{
+          transition:transform .22s cubic-bezier(.22,1,.36,1),
+                     box-shadow .22s ease,
+                     border-color .22s ease,
+                     background .22s ease !important;
+          cursor:pointer;
+        }
+        .card-hover:hover{
+          transform:translateY(-3px) scale(1.012);
+          box-shadow:0 8px 32px rgba(212,168,67,.12);
+        }
+        .card-hover:active{transform:translateY(-1px) scale(1.005);}
+
+        .card-hover-bw:hover{
+          transform:translateY(-3px) scale(1.012);
+          box-shadow:0 8px 24px rgba(0,0,0,.12);
+        }
+
+        /* ── Button press ── */
+        .btn-press{transition:transform .12s ease,opacity .12s ease;}
+        .btn-press:hover{transform:scale(1.04);opacity:.9;}
+        .btn-press:active{transform:scale(.97);}
+
+        /* ── Shimmer text ── */
+        .shimmer-text{
+          background:linear-gradient(90deg,#D4A843 0%,#F5E4B0 45%,#D4A843 55%,#D4A843 100%);
+          background-size:200% auto;
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+          background-clip:text;
+          animation:shimmer 3s linear infinite;
+        }
+        .shimmer-text-bw{
+          background:linear-gradient(90deg,#0A0A0A 0%,#555 45%,#0A0A0A 55%,#0A0A0A 100%);
+          background-size:200% auto;
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+          background-clip:text;
+          animation:shimmer 3s linear infinite;
+        }
+
+        /* ── Progress bar with animation ── */
+        .bar-animate{animation:barFill .8s cubic-bezier(.22,1,.36,1) .3s both;}
+
+        /* ── Fade-up list items ── */
+        .fade-up{opacity:0;animation:fadeIn .4s cubic-bezier(.22,1,.36,1) both;}
+        .fade-left{opacity:0;animation:fadeInLeft .4s cubic-bezier(.22,1,.36,1) both;}
+        .fade-right{opacity:0;animation:fadeInRight .4s cubic-bezier(.22,1,.36,1) both;}
+        .pop-in{opacity:0;animation:popIn .4s cubic-bezier(.22,1,.36,1) both;}
+
+        /* ── Scan line overlay (for NFC hero feel) ── */
+        .scan-line::after{
+          content:'';
+          position:absolute;
+          left:0;right:0;height:2px;
+          background:linear-gradient(to right,transparent,rgba(212,168,67,.25),transparent);
+          animation:scanLine 4s linear infinite;
+          pointer-events:none;
+        }
+
+        /* ── Dot pulse indicators ── */
+        .live-dot{
+          display:inline-block;
+          width:6px;height:6px;border-radius:50%;
+          background:#4ADE80;
+          animation:pulse 2s ease infinite;
+          box-shadow:0 0 6px #4ADE80;
+        }
+
+        /* ── Nav tab active indicator ── */
+        .tab-active-bar{
+          display:block;
+          height:2px;
+          transform-origin:left;
+          animation:tabUnderline .2s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        /* ── Float animation for decorative orbs ── */
+        .orb-float{animation:orbFloat 8s ease-in-out infinite;}
+        .orb-float-2{animation:orbFloat 11s ease-in-out infinite reverse;}
+        .glow-pulse{animation:glowPulse 3s ease-in-out infinite;}
+
+        /* ── Mobile ── */
         .mobile-nav{display:none!important;}
         @media(max-width:768px){
           .mobile-nav{display:flex!important;}
