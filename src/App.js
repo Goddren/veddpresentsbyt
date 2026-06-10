@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Platform from "./Platform";
 import CertHub from "./CertHub";
 import DeepModules from "./DeepModules";
 import TracksGrants from "./TracksGrants";
 import Calendar from "./Calendar";
+import AIAgent from "./AIAgent";
+import NFCLanding from "./NFCLanding";
 
 export const THEMES = {
   gold: {
@@ -25,20 +27,29 @@ export const THEMES = {
 };
 
 const TABS = [
-  { id: "platform",  label: "🏠 Platform" },
-  { id: "modules",   label: "📚 Modules" },
-  { id: "certs",     label: "🏅 Certs" },
-  { id: "grants",    label: "📋 Grants" },
-  { id: "calendar",  label: "🗓️ Roadmap" },
+  { id: "platform", label: "🏠 Platform" },
+  { id: "modules",  label: "📚 Modules" },
+  { id: "certs",    label: "🏅 Certs" },
+  { id: "grants",   label: "📋 Grants" },
+  { id: "calendar", label: "🗓️ Roadmap" },
+  { id: "ai",       label: "✦ AI Agent" },
 ];
 
 const SAVE_THEME = "byt_theme_v1";
 
+function isNFCScan() {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    return p.has("nfc") || p.has("scan") || p.has("tap");
+  } catch { return false; }
+}
+
 export default function App() {
-  const [tab,   setTab]   = useState("platform");
-  const [themeName, setThemeName] = useState(() => {
+  const [tab,       setTab]      = useState("platform");
+  const [themeName, setThemeName]= useState(() => {
     try { return localStorage.getItem(SAVE_THEME) || "gold"; } catch { return "gold"; }
   });
+  const [showNFC,   setShowNFC]  = useState(() => isNFCScan());
 
   const T = THEMES[themeName];
 
@@ -48,16 +59,32 @@ export default function App() {
     try { localStorage.setItem(SAVE_THEME, next); } catch {}
   }
 
+  function enterFromNFC() {
+    setShowNFC(false);
+    // Remove ?nfc param from URL without reload
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("nfc");
+      url.searchParams.delete("scan");
+      url.searchParams.delete("tap");
+      window.history.replaceState({}, "", url);
+    } catch {}
+  }
+
   const pages = {
     platform: <Platform theme={T} setTab={setTab} />,
     modules:  <DeepModules theme={T} />,
     certs:    <CertHub theme={T} />,
     grants:   <TracksGrants theme={T} />,
     calendar: <Calendar theme={T} />,
+    ai:       <AIAgent theme={T} />,
   };
 
   return (
     <div style={{ background: T.bg, minHeight: "100vh", fontFamily: "Georgia,serif" }}>
+
+      {/* NFC cinematic landing */}
+      {showNFC && <NFCLanding theme={T} onEnter={enterFromNFC} />}
 
       {/* Sticky nav */}
       <div style={{
@@ -71,7 +98,6 @@ export default function App() {
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "10px 16px", borderBottom: `1px solid ${T.borderSoft}`
         }}>
-          {/* Logo mark */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {themeName === "gold" ? (
               <>
@@ -83,7 +109,6 @@ export default function App() {
                 <span style={{ fontFamily: "monospace", fontSize: 7, color: T.muted, letterSpacing: ".22em" }}>PLATFORM</span>
               </>
             ) : (
-              /* B&W logo strip */
               <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
                 <div style={{ background: "#0A0A0A", padding: "4px 10px", display: "flex", alignItems: "center" }}>
                   <span style={{ fontFamily: "Georgia,serif", fontWeight: 900, fontSize: 18, color: "#FFFFFF", letterSpacing: ".1em" }}>BYT</span>
@@ -97,6 +122,14 @@ export default function App() {
 
           <div style={{ fontFamily: "monospace", fontSize: 7, color: T.muted, letterSpacing: ".12em", display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ display: "none" }} className="tagline">BE YE TRANSFORMED</span>
+            {/* NFC preview trigger */}
+            <button onClick={() => setShowNFC(true)} style={{
+              background: "transparent", border: `1px solid ${T.borderSoft}`,
+              color: T.muted, fontFamily: "monospace", fontSize: 7, letterSpacing: ".1em",
+              padding: "4px 10px", cursor: "pointer", display: "flex", alignItems: "center", gap: 5
+            }}>
+              📡 NFC
+            </button>
             {/* Theme toggle */}
             <button onClick={toggleTheme} style={{
               background: themeName === "bw" ? "#0A0A0A" : "rgba(212,168,67,.1)",
@@ -115,11 +148,11 @@ export default function App() {
         <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none", padding: "0 8px" }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
-              flex: 1, minWidth: 90, padding: "10px 8px",
+              flex: 1, minWidth: 80, padding: "10px 6px",
               background: tab === t.id ? T.inputBg : "transparent",
               border: "none", borderBottom: `2px solid ${tab === t.id ? T.a : "transparent"}`,
               color: tab === t.id ? T.a : T.muted,
-              fontFamily: "monospace", fontSize: 9, letterSpacing: ".08em",
+              fontFamily: "monospace", fontSize: 8, letterSpacing: ".06em",
               cursor: "pointer", whiteSpace: "nowrap", transition: "all .18s"
             }}>{t.label}</button>
           ))}
@@ -139,11 +172,11 @@ export default function App() {
       }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
-            flex: 1, padding: "8px 4px", background: "transparent", border: "none",
+            flex: 1, padding: "8px 2px", background: "transparent", border: "none",
             display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer"
           }}>
-            <span style={{ fontSize: 16 }}>{t.label.split(" ")[0]}</span>
-            <span style={{ fontFamily: "monospace", fontSize: 6, letterSpacing: ".06em", color: tab === t.id ? T.a : T.muted }}>
+            <span style={{ fontSize: 14 }}>{t.label.split(" ")[0]}</span>
+            <span style={{ fontFamily: "monospace", fontSize: 5, letterSpacing: ".04em", color: tab === t.id ? T.a : T.muted }}>
               {t.label.split(" ").slice(1).join(" ")}
             </span>
           </button>
