@@ -1,9 +1,211 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { t } from "./i18n";
 
 const SAVE_KEY = "byt_modules_v1";
 const load = () => { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"); } catch { return {}; } };
 const save = d => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(d)); } catch {} };
 
+/* ─── Visual Diagrams ──────────────────────────────────────────────────── */
+
+function MarketStructureDiagram({ color }) {
+  return (
+    <svg viewBox="0 0 480 160" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", maxWidth:480, margin:"12px 0", display:"block" }}>
+      <defs>
+        <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill={color} />
+        </marker>
+      </defs>
+      {/* Uptrend side */}
+      <text x="10" y="14" fontSize="9" fill={color} fontFamily="monospace" letterSpacing="2">BULLISH — HH/HL</text>
+      <polyline points="20,130 60,110 80,120 120,90 140,100 180,65 200,75" stroke="#4ADE80" strokeWidth="2" fill="none" />
+      {/* Labels */}
+      <text x="22" y="142" fontSize="7" fill="#4ADE80" fontFamily="monospace">HL</text>
+      <text x="62" y="108" fontSize="7" fill="#4ADE80" fontFamily="monospace">HH</text>
+      <text x="82" y="132" fontSize="7" fill="#4ADE80" fontFamily="monospace">HL</text>
+      <text x="122" y="88" fontSize="7" fill="#4ADE80" fontFamily="monospace">HH</text>
+      <text x="142" y="112" fontSize="7" fill="#4ADE80" fontFamily="monospace">HL</text>
+      <text x="182" y="63" fontSize="7" fill="#4ADE80" fontFamily="monospace">HH</text>
+      {/* Divider */}
+      <line x1="240" y1="10" x2="240" y2="150" stroke="rgba(255,255,255,.1)" strokeWidth="1" strokeDasharray="4,4" />
+      {/* Downtrend side */}
+      <text x="250" y="14" fontSize="9" fill={color} fontFamily="monospace" letterSpacing="2">BEARISH — LH/LL</text>
+      <polyline points="260,40 300,60 320,50 360,75 380,65 420,90 440,80" stroke="#F87171" strokeWidth="2" fill="none" />
+      <text x="262" y="38" fontSize="7" fill="#F87171" fontFamily="monospace">LH</text>
+      <text x="302" y="72" fontSize="7" fill="#F87171" fontFamily="monospace">LL</text>
+      <text x="322" y="48" fontSize="7" fill="#F87171" fontFamily="monospace">LH</text>
+      <text x="362" y="87" fontSize="7" fill="#F87171" fontFamily="monospace">LL</text>
+      <text x="382" y="63" fontSize="7" fill="#F87171" fontFamily="monospace">LH</text>
+      <text x="422" y="102" fontSize="7" fill="#F87171" fontFamily="monospace">LL</text>
+    </svg>
+  );
+}
+
+function OrderBlockDiagram({ color }) {
+  return (
+    <svg viewBox="0 0 360 180" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", maxWidth:360, margin:"12px 0", display:"block" }}>
+      <text x="10" y="14" fontSize="9" fill={color} fontFamily="monospace" letterSpacing="2">ORDER BLOCK · BULLISH</text>
+      {/* Candles before OB */}
+      {[0,1,2].map(i => (
+        <g key={i}>
+          <line x1={30+i*30} y1={80+i*5} x2={30+i*30} y2={130-i*3} stroke="#F87171" strokeWidth="1.5" />
+          <rect x={23+i*30} y={90+i*5} width="14" height={28-i*3} fill="#F87171" rx="1" />
+        </g>
+      ))}
+      {/* OB candle highlight */}
+      <rect x="110" y="72" width="60" height="38" fill="rgba(212,168,67,.15)" stroke="#D4A843" strokeWidth="1.5" strokeDasharray="3,2" rx="2" />
+      <text x="112" y="68" fontSize="7" fill="#D4A843" fontFamily="monospace">OB ZONE</text>
+      <line x1="140" y1="60" x2="140" y2="110" stroke="#F87171" strokeWidth="1.5" />
+      <rect x="133" y="72" width="14" height="30" fill="#F87171" rx="1" />
+      {/* Impulse up */}
+      <line x1="175" y1="40" x2="175" y2="90" stroke="#4ADE80" strokeWidth="1.5" />
+      <rect x="168" y="40" width="14" height="40" fill="#4ADE80" rx="1" />
+      <line x1="205" y1="25" x2="205" y2="65" stroke="#4ADE80" strokeWidth="1.5" />
+      <rect x="198" y="25" width="14" height="35" fill="#4ADE80" rx="1" />
+      <line x1="235" y1="15" x2="235" y2="50" stroke="#4ADE80" strokeWidth="1.5" />
+      <rect x="228" y="15" width="14" height="30" fill="#4ADE80" rx="1" />
+      {/* Retrace arrow */}
+      <path d="M260,20 Q290,80 140,82" stroke="#D4A843" strokeWidth="1.5" fill="none" strokeDasharray="4,2" markerEnd="url(#arr2)" />
+      <defs>
+        <marker id="arr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#D4A843" />
+        </marker>
+      </defs>
+      <text x="265" y="18" fontSize="8" fill="#D4A843" fontFamily="monospace">Price retests OB</text>
+      <text x="265" y="30" fontSize="8" fill="#D4A843" fontFamily="monospace">→ continues up</text>
+    </svg>
+  );
+}
+
+function FVGDiagram({ color }) {
+  return (
+    <svg viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", maxWidth:320, margin:"12px 0", display:"block" }}>
+      <text x="10" y="14" fontSize="9" fill={color} fontFamily="monospace" letterSpacing="2">FAIR VALUE GAP</text>
+      {/* Candle 1 */}
+      <line x1="40" y1="80" x2="40" y2="130" stroke="#4ADE80" strokeWidth="1.5" />
+      <rect x="33" y="90" width="14" height="30" fill="#4ADE80" rx="1" />
+      <text x="28" y="142" fontSize="7" fill="rgba(255,255,255,.4)" fontFamily="monospace">C1</text>
+      {/* Candle 2 — big impulse */}
+      <line x1="80" y1="30" x2="80" y2="85" stroke="#4ADE80" strokeWidth="1.5" />
+      <rect x="73" y="30" width="14" height="55" fill="#4ADE80" rx="1" />
+      <text x="68" y="142" fontSize="7" fill="rgba(255,255,255,.4)" fontFamily="monospace">C2</text>
+      {/* Candle 3 */}
+      <line x1="120" y1="20" x2="120" y2="60" stroke="#4ADE80" strokeWidth="1.5" />
+      <rect x="113" y="20" width="14" height="35" fill="#4ADE80" rx="1" />
+      <text x="108" y="142" fontSize="7" fill="rgba(255,255,255,.4)" fontFamily="monospace">C3</text>
+      {/* FVG zone */}
+      <rect x="90" y="55" width="20" height="25" fill="rgba(212,168,67,.2)" stroke="#D4A843" strokeWidth="1" strokeDasharray="3,2" />
+      <line x1="90" y1="55" x2="170" y2="55" stroke="#D4A843" strokeWidth="1" strokeDasharray="2,3" />
+      <line x1="90" y1="80" x2="170" y2="80" stroke="#D4A843" strokeWidth="1" strokeDasharray="2,3" />
+      <text x="150" y="53" fontSize="7" fill="#D4A843" fontFamily="monospace">C1 high</text>
+      <text x="150" y="83" fontSize="7" fill="#D4A843" fontFamily="monospace">C3 low</text>
+      <text x="148" y="68" fontSize="8" fill="#D4A843" fontFamily="monospace" fontWeight="bold">FVG</text>
+      {/* Fill arrow */}
+      <path d="M200,20 C210,40 200,60 165,67" stroke="#D4A843" strokeWidth="1.5" fill="none" strokeDasharray="3,2" />
+      <text x="165" y="18" fontSize="8" fill="#D4A843" fontFamily="monospace">Price fills gap</text>
+      <text x="165" y="28" fontSize="8" fill="#D4A843" fontFamily="monospace">before continuing</text>
+    </svg>
+  );
+}
+
+function BRRRRDiagram({ color }) {
+  const steps = ["BUY","REHAB","RENT","REFI","REPEAT"];
+  const colors = ["#60A5FA","#F59E0B","#4ADE80","#A78BFA","#D4A843"];
+  return (
+    <svg viewBox="0 0 420 80" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", maxWidth:420, margin:"12px 0", display:"block" }}>
+      <text x="10" y="14" fontSize="9" fill={color} fontFamily="monospace" letterSpacing="2">THE BRRRR CYCLE</text>
+      {steps.map((s, i) => (
+        <g key={s}>
+          <rect x={20+i*78} y="25" width="60" height="36" fill={`${colors[i]}18`} stroke={colors[i]} strokeWidth="1.5" rx="4" />
+          <text x={50+i*78} y="38" fontSize="7" fill={colors[i]} fontFamily="monospace" textAnchor="middle" letterSpacing="1">{s}</text>
+          {i < 4 && <text x={84+i*78} y="46" fontSize="12" fill="rgba(255,255,255,.3)" textAnchor="middle">→</text>}
+        </g>
+      ))}
+      {/* Loop back arrow */}
+      <path d="M400,62 Q210,95 50,62" stroke="rgba(212,168,67,.3)" strokeWidth="1" fill="none" strokeDasharray="4,3" />
+      <text x="170" y="80" fontSize="7" fill="rgba(212,168,67,.4)" fontFamily="monospace" textAnchor="middle">repeat with refinance proceeds</text>
+    </svg>
+  );
+}
+
+function BlockchainDiagram({ color }) {
+  return (
+    <svg viewBox="0 0 440 100" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", maxWidth:440, margin:"12px 0", display:"block" }}>
+      <text x="10" y="14" fontSize="9" fill={color} fontFamily="monospace" letterSpacing="2">BLOCKCHAIN STRUCTURE</text>
+      {[0,1,2,3].map(i => (
+        <g key={i}>
+          <rect x={20+i*100} y="25" width="80" height="58" fill={`${color}10`} stroke={color} strokeWidth="1" rx="4" />
+          <text x={60+i*100} y="40" fontSize="6" fill={color} fontFamily="monospace" textAnchor="middle" letterSpacing="1">BLOCK {i+1}</text>
+          <line x1={30+i*100} y1="45" x2={90+i*100} y2="45" stroke={`${color}30`} strokeWidth="1" />
+          <text x={60+i*100} y="56" fontSize="5.5" fill="rgba(255,255,255,.35)" fontFamily="monospace" textAnchor="middle">hash: a3f{i}b...</text>
+          <text x={60+i*100} y="67" fontSize="5.5" fill="rgba(255,255,255,.35)" fontFamily="monospace" textAnchor="middle">prev: {i===0 ? "0000..." : `a3f${i-1}b...`}</text>
+          <text x={60+i*100} y="77" fontSize="5.5" fill="rgba(255,255,255,.35)" fontFamily="monospace" textAnchor="middle">txns: [{i*3+2}]</text>
+          {i < 3 && <text x={104+i*100} y="57" fontSize="14" fill={`${color}50`} textAnchor="middle">⛓</text>}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function WealthStackDiagram({ color }) {
+  const layers = [
+    { label:"401k (match)", w:"95%", c:"#4ADE80" },
+    { label:"HSA",          w:"85%", c:"#60A5FA" },
+    { label:"Roth IRA",     w:"75%", c:"#A78BFA" },
+    { label:"Max 401k",     w:"65%", c:"#F59E0B" },
+    { label:"Brokerage",    w:"55%", c:"#FB923C" },
+    { label:"Real Estate",  w:"40%", c:"#D4A843" },
+  ];
+  return (
+    <svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", maxWidth:360, margin:"12px 0", display:"block" }}>
+      <text x="10" y="14" fontSize="9" fill={color} fontFamily="monospace" letterSpacing="2">INVESTMENT STACK (IN ORDER)</text>
+      {layers.map((l, i) => (
+        <g key={l.label}>
+          <text x="12" y={34+i*20} fontSize="7" fill="rgba(255,255,255,.5)" fontFamily="monospace">{i+1}</text>
+          <rect x="28" y={24+i*20} width={parseInt(l.w)*2.6} height="14" fill={`${l.c}20`} stroke={l.c} strokeWidth="1" rx="2" />
+          <text x="34" y={34+i*20} fontSize="7.5" fill={l.c} fontFamily="monospace">{l.label}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function LiquidityDiagram({ color }) {
+  return (
+    <svg viewBox="0 0 380 170" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", maxWidth:380, margin:"12px 0", display:"block" }}>
+      <text x="10" y="14" fontSize="9" fill={color} fontFamily="monospace" letterSpacing="2">LIQUIDITY SWEEP → REVERSAL</text>
+      {/* Price path */}
+      <polyline points="20,100 60,90 90,95 120,70 150,75 180,50 210,55 230,30 260,35 270,60 300,100 320,90 350,120"
+        stroke="#60A5FA" strokeWidth="2" fill="none" />
+      {/* SSL zone */}
+      <line x1="20" y1="100" x2="200" y2="100" stroke="#F87171" strokeWidth="1" strokeDasharray="3,3" />
+      <text x="22" y="113" fontSize="7" fill="#F87171" fontFamily="monospace">SSL — stop losses cluster here</text>
+      {/* BSL zone */}
+      <line x1="20" y1="35" x2="280" y2="35" stroke="#4ADE80" strokeWidth="1" strokeDasharray="3,3" />
+      <text x="22" y="28" fontSize="7" fill="#4ADE80" fontFamily="monospace">BSL — buy stops above highs</text>
+      {/* Sweep annotation */}
+      <circle cx="230" cy="30" r="6" fill="none" stroke="#D4A843" strokeWidth="1.5" />
+      <text x="238" y="26" fontSize="7" fill="#D4A843" fontFamily="monospace">BSL</text>
+      <text x="238" y="35" fontSize="7" fill="#D4A843" fontFamily="monospace">grab</text>
+      {/* Reversal arrow */}
+      <path d="M270,60 Q290,90 320,88" stroke="#4ADE80" strokeWidth="2" fill="none" />
+      <text x="285" y="78" fontSize="7" fill="#4ADE80" fontFamily="monospace">reversal</text>
+    </svg>
+  );
+}
+
+/* ─── Lesson visuals map ────────────────────────────────────────────────── */
+const VISUALS = {
+  t1l1: (c) => <MarketStructureDiagram color={c} />,
+  t1l2: (c) => <LiquidityDiagram color={c} />,
+  t1l3: (c) => <OrderBlockDiagram color={c} />,
+  t2l1: (c) => <LiquidityDiagram color={c} />,
+  t2l2: (c) => <FVGDiagram color={c} />,
+  c1l1: (c) => <BlockchainDiagram color={c} />,
+  re1l1:(c) => <BRRRRDiagram color={c} />,
+  inv1l1:(c)=> <WealthStackDiagram color={c} />,
+};
+
+/* ─── Track data ────────────────────────────────────────────────────────── */
 const TRACKS = [
   {
     id: "trading", icon: "📈", color: "#60A5FA", name: "Trading & Markets",
@@ -234,13 +436,6 @@ $BYT (Be Ye Transformed) is the utility and rewards token of the BYT ecosystem, 
 | NFC garment tap | 1 $BYT |
 | Refer a new member | 20 $BYT |
 
-**How to Use $BYT:**
-- Unlock premium course content
-- Redeem for physical merchandise
-- Stake for governance voting rights
-- Trade on Solana DEXs (Raydium/Jupiter)
-- Future: real estate investment pools
-
 **Total Supply:** 100,000,000 $BYT
 - 40% — Community rewards (earn-to-learn)
 - 20% — Development fund
@@ -248,13 +443,7 @@ $BYT (Be Ye Transformed) is the utility and rewards token of the BYT ecosystem, 
 - 15% — Grant-matching treasury
 - 10% — Liquidity (DEX)
 
-**Vesting:** Team tokens lock for 12 months, then release over 4 years. This prevents dumping and aligns long-term incentives.
-
-**Governance:** $BYT holders vote on:
-- New certification tracks to add
-- Grant allocation priorities
-- Platform fee structures
-- Expansion to new cities` },
+**Governance:** $BYT holders vote on new certification tracks, grant allocation priorities, platform fee structures, and expansion to new cities.` },
         ]
       },
     ]
@@ -311,7 +500,6 @@ Operating Expenses:
 - Utilities (if any): -$0
 
 Net Operating Income (NOI): $704/mo
-
 Debt Service (mortgage @ 7%, 30yr, $75K loan): -$499/mo
 
 **Monthly Cash Flow: $205**
@@ -321,12 +509,7 @@ Debt Service (mortgage @ 7%, 30yr, $75K loan): -$499/mo
 **Key Metrics:**
 - Cap Rate = NOI / Purchase Price (target 8%+)
 - Cash-on-Cash = Annual Cash Flow / Cash Invested (target 10%+)
-- GRM = Price / Annual Gross Rent (lower is better, target <10)
-
-**Avoid:**
-- Buying in war zones for cash flow (vacancy, maintenance nightmare)
-- Ignoring CapEx (roof, HVAC have a lifespan — budget for them)
-- Over-leveraging (keep DSCR above 1.25)` },
+- GRM = Price / Annual Gross Rent (lower is better, target <10)` },
         ]
       },
     ]
@@ -352,8 +535,7 @@ Debt Service (mortgage @ 7%, 30yr, $75K loan): -$499/mo
 **Key Techniques:**
 
 **1. Chain of Thought**
-Ask the AI to think step-by-step before answering:
-"Before giving me the answer, think through each step of the analysis."
+Ask the AI to think step-by-step before answering.
 
 **2. Role Assignment**
 "You are a [role] with [X] years experience in [field]..."
@@ -362,10 +544,7 @@ Ask the AI to think step-by-step before answering:
 Provide 1-2 examples of the output format you want before asking the question.
 
 **4. Iteration**
-Never accept the first output. Follow up with:
-- "Make it more concise"
-- "Add more specifics about X"
-- "Write this for a 10th grade reading level"
+Never accept the first output. Follow up with: "Make it more concise" or "Add more specifics about X"
 
 **Tools to Know:**
 - Claude (Anthropic): Best for long documents, analysis, coding
@@ -396,23 +575,19 @@ For each grant opportunity:
 **Step 3: The Prompting Sequence**
 
 Prompt 1 — Needs Statement:
-"Using the following data about Tulsa, OK [paste local poverty/education stats], write a compelling needs statement for a workforce development grant. Emphasize the gap between current outcomes and what's possible with intervention."
+"Using the following data about Tulsa, OK [paste local poverty/education stats], write a compelling needs statement for a workforce development grant."
 
 Prompt 2 — Program Description:
-"Write a program description for BYT Academy for a WIOA Section 166 grant. Our program: [paste details]. Use outcomes-based language aligned with WIOA priorities."
+"Write a program description for BYT Academy for a WIOA Section 166 grant."
 
 Prompt 3 — Budget Narrative:
-"Write a budget narrative justifying these line items: [paste budget]. Explain each cost as essential to program delivery."
+"Write a budget narrative justifying these line items: [paste budget]."
 
 Prompt 4 — Evaluation Plan:
-"Write an evaluation plan section. Our measurable outcomes: [list]. Our data collection method: [describe]. Use logic model language."
+"Write an evaluation plan section. Our measurable outcomes: [list]."
 
-**Step 5: Human Review**
-AI writes the draft. You:
-- Add specific local names, partners, stories
-- Check every fact and statistic
-- Ensure numbers match your actual budget
-- Get a community leader to review` },
+**Step 4: Human Review**
+AI writes the draft. You add specific local names, partners, and stories. Check every fact and statistic.` },
         ]
       },
     ]
@@ -427,7 +602,6 @@ AI writes the draft. You:
           { id:"bb1l1", title:"Building Business Credit from Zero", mins:16, content:`Business credit is entirely separate from personal credit. With the right strategy, you can build $50,000-$250,000 in business credit in 12-18 months, with NO personal guarantee required.
 
 **Step 1: Build Your Business Foundation (Months 1-2)**
-
 - Form an LLC or Corporation (not a sole prop — no separation)
 - Get an EIN from IRS.gov (free, instant)
 - Open a dedicated business bank account
@@ -436,20 +610,17 @@ AI writes the draft. You:
 - Register with Dun & Bradstreet — get your DUNS number (free at dnb.com)
 
 **Step 2: Establish Trade Lines (Months 2-4)**
-
 Net-30 vendors report your payment history to business credit bureaus. Pay early and build your profile.
 
 Top Starter Net-30 Accounts:
-- Uline (uline.com) — office/shipping supplies
-- Quill (quill.com) — office supplies
-- Grainger (grainger.com) — industrial supplies
-- Crown Office Supplies
-- Summa Office Supplies
+- Uline — office/shipping supplies
+- Quill — office supplies
+- Grainger — industrial supplies
 
 Order small amounts ($100-500). Pay on day 20-25 (not day 30). Do this 3 months in a row.
 
 **Step 3: Monitor Your Scores**
-- Dun & Bradstreet PAYDEX: Target 80+ (pays on time)
+- Dun & Bradstreet PAYDEX: Target 80+
 - Experian Business: Target 70+
 - Equifax Business: Target 90+
 Use Nav.com (free tier) to monitor all three.
@@ -458,10 +629,7 @@ Use Nav.com (free tier) to monitor all three.
 With 8-10 trade lines and 6 months of history:
 - Apply for Brex (no personal guarantee, $25K-$150K limit)
 - Apply for Amex Blue Business Cash
-- Apply for a secured business line of credit
-
-**The Thomas Montgomery Strategy:**
-Use aged shelf corporations (companies formed years ago with clean history) to jumpstart your credit timeline. Combine with pre-award grant letters as collateral for accelerated approval.` },
+- Apply for a secured business line of credit` },
         ]
       },
     ]
@@ -499,13 +667,10 @@ For most people, a simple 3-fund portfolio beats 90% of active managers:
 - 10% BND (Bonds) — increase with age
 
 **Step 4: Time is the Variable**
-$500/mo invested for 40 years at 8% average return = **$1,745,505**
+$500/mo invested for 40 years at 8% average return = $1,745,505
 $500/mo invested for 20 years at 8% = $294,510
 
-Starting 20 years earlier yields 6x more wealth. Start NOW, even if small.
-
-**Generational Wealth Principle:**
-Invest in assets that appreciate AND generate income: rental properties, dividend stocks, businesses. These create wealth that outlasts you.` },
+Starting 20 years earlier yields 6x more wealth. Start NOW, even if small.` },
         ]
       },
     ]
@@ -524,16 +689,13 @@ Invest in assets that appreciate AND generate income: rental properties, dividen
 **Software Development** — $70K-$150K starting
 Stack: JavaScript + React for frontend, Python or Node.js for backend
 Timeline: 6-12 months to job-ready with focused study
-Resources: freeCodeCamp, The Odin Project, Scrimba
 
 **Data Analysis** — $55K-$120K starting
 Stack: SQL + Python (Pandas) + Tableau
 Timeline: 4-8 months
-Path: Google Data Analytics Certificate → portfolio → job
 
 **Cybersecurity** — $65K-$130K starting
 Certifications: CompTIA Security+ → CEH → CISSP
-Timeline: 6-18 months
 High demand, especially for government/defense contractors
 
 **Cloud Engineering** — $80K-$150K starting
@@ -572,24 +734,17 @@ This is the gold rush of our era
 **Top Trades by Income Potential:**
 1. **Elevator Technician** — $97,000 avg, union, hardest to break in
 2. **Electrician** — $60-120K, own business potential unlimited
-3. **Plumber** — $58-100K, perpetual demand (pipes never stop breaking)
+3. **Plumber** — $58-100K, perpetual demand
 4. **HVAC Technician** — $52-90K, seasonal spikes in pricing power
 5. **Welder** — $42-80K, underwater/pipeline welding pays $150K+
 
 **The Business Stack:**
-Most trades workers stay employees. The wealth is in owning the business.
-
 Year 1-3: Apprentice/Journeyman (learn the trade)
 Year 3-5: Foreman/Lead tech (learn to manage)
 Year 5-7: Get your master license (now you can pull permits)
 Year 7+: Start your own company
 
-**One truck + one helper = $200-400K/year in revenue for a skilled tradesman.**
-
-**BYT trades track prepares you to:**
-- Understand which trade fits your strengths
-- Identify apprenticeship programs in Tulsa
-- Plan your business formation from day one` },
+**One truck + one helper = $200-400K/year in revenue for a skilled tradesman.**` },
         ]
       },
     ]
@@ -606,7 +761,7 @@ Year 7+: Start your own company
 **The Foundation Stack:**
 
 **Sleep (Non-Negotiable)**
-Sleep is when your brain consolidates learning and your body repairs. CEOs who brag about sleeping 4 hours are burning out their cognitive edge.
+Sleep is when your brain consolidates learning and your body repairs.
 - Target 7-9 hours for adults
 - Sleep and wake at the same time daily (even weekends)
 - No screens 30 minutes before bed
@@ -620,7 +775,7 @@ Exercise is the most powerful antidepressant and cognitive enhancer available.
 
 **Nutrition for Performance**
 - Protein first at every meal (0.8-1g per pound of bodyweight)
-- Minimize ultra-processed food (engineered to override your satiety signals)
+- Minimize ultra-processed food
 - Hydrate: Half your bodyweight in ounces of water daily
 - Meal prep Sunday: removes daily decision fatigue
 
@@ -679,15 +834,30 @@ You teach 20 people. Those 20 teach 20 more. Within 3 years, your single decisio
   },
 ];
 
-export default function DeepModules({ theme }) {
-  const T = theme || { bg:"#05050A", surf:"#0D0B1A", a:"#D4A843", text:"#F5F0E8", muted:"rgba(212,168,67,.45)", border:"rgba(212,168,67,.15)", borderSoft:"rgba(212,168,67,.07)", inputBg:"rgba(212,168,67,.06)", green:"#4ADE80", name:"gold" };
-  const bw = T.name === "bw";
+/* ─── Flat lesson list for prev/next nav ────────────────────────────────── */
+const ALL_LESSONS = TRACKS.flatMap(tr =>
+  tr.modules.flatMap(mod =>
+    mod.lessons.map(les => ({ ...les, trackId: tr.id, modId: mod.id, trackColor: tr.color, trackName: tr.name, trackIcon: tr.icon }))
+  )
+);
+
+/* ─── Component ─────────────────────────────────────────────────────────── */
+export default function DeepModules({ theme, lang = "en" }) {
+  const T   = theme || { bg:"#05050A", surf:"#0D0B1A", a:"#D4A843", text:"#F5F0E8", muted:"rgba(212,168,67,.45)", border:"rgba(212,168,67,.15)", borderSoft:"rgba(212,168,67,.07)", inputBg:"rgba(212,168,67,.06)", green:"#4ADE80", name:"gold" };
+  const bw  = T.name === "bw";
+  const tr  = k => t(lang, k);
 
   const [saved,    setSaved]    = useState(() => load());
   const [trackId,  setTrackId]  = useState("trading");
   const [modId,    setModId]    = useState("t1");
   const [lessonId, setLessonId] = useState(null);
   const [mob,      setMob]      = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const h = () => setMob(window.innerWidth < 768);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
 
   const done = saved.done || {};
   function markDone(id) {
@@ -697,12 +867,24 @@ export default function DeepModules({ theme }) {
     save(ns);
   }
 
-  const track  = TRACKS.find(t => t.id === trackId);
+  function openLesson(les) {
+    setTrackId(les.trackId);
+    setModId(les.modId);
+    setLessonId(les.id);
+  }
+
+  const track  = TRACKS.find(tr => tr.id === trackId);
   const module = track?.modules.find(m => m.id === modId);
   const lesson = module?.lessons.find(l => l.id === lessonId);
 
-  const totalLessons = TRACKS.flatMap(t => t.modules.flatMap(m => m.lessons)).length;
+  // Prev / next across ALL lessons
+  const flatIdx   = ALL_LESSONS.findIndex(l => l.id === lessonId);
+  const prevLesson = flatIdx > 0                        ? ALL_LESSONS[flatIdx - 1] : null;
+  const nextLesson = flatIdx < ALL_LESSONS.length - 1   ? ALL_LESSONS[flatIdx + 1] : null;
+
+  const totalLessons = ALL_LESSONS.length;
   const totalDone    = Object.values(done).filter(Boolean).length;
+  const pct          = Math.round(totalDone / totalLessons * 100);
 
   return (
     <div style={{ background:T.bg, minHeight:"100vh", color:T.text, fontFamily:"Georgia,serif" }}>
@@ -711,41 +893,48 @@ export default function DeepModules({ theme }) {
       <div style={{ padding:"16px 18px 12px", background:T.surf, borderBottom:`1px solid ${T.border}` }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", flexWrap:"wrap", gap:8 }}>
           <div>
-            <div style={{ fontFamily:"monospace", fontSize:8, letterSpacing:".35em", color:T.muted, marginBottom:4 }}>BYT ACADEMY · DEEP MODULES</div>
-            <h1 style={{ fontFamily:"Georgia,serif", fontWeight:900, fontSize:20, color:T.a }}>Deep Learning Modules</h1>
+            <div style={{ fontFamily:"monospace", fontSize:8, letterSpacing:".35em", color:T.muted, marginBottom:4 }}>{tr("deepHeader")}</div>
+            <h1 style={{ fontFamily:"Georgia,serif", fontWeight:900, fontSize:20, color:T.a }}>{tr("deepModules")}</h1>
           </div>
           <div style={{ textAlign:"right" }}>
-            <div style={{ fontFamily:"monospace", fontSize:8, color:T.muted }}>PROGRESS</div>
+            <div style={{ fontFamily:"monospace", fontSize:8, color:T.muted }}>{tr("progress")}</div>
             <div style={{ fontFamily:"monospace", fontWeight:900, fontSize:20, color:T.a }}>{totalDone}/{totalLessons}</div>
-            <div style={{ fontFamily:"monospace", fontSize:7, color:T.muted }}>lessons complete</div>
+            <div style={{ fontFamily:"monospace", fontSize:7, color:T.muted }}>{pct}% · {tr("lessonsComplete")}</div>
           </div>
         </div>
         <div style={{ height:3, background:T.borderSoft, borderRadius:2, overflow:"hidden", marginTop:8 }}>
-          <div style={{ height:"100%", background:T.a, width:`${Math.round(totalDone/totalLessons*100)}%`, borderRadius:2, transition:"width .5s" }} />
+          <div className="bar-animate" style={{ height:"100%", background:`linear-gradient(to right, ${T.a}, ${T.a}BB)`, width:`${pct}%`, borderRadius:2, "--w":`${pct}%` }} />
         </div>
       </div>
 
-      <div style={{ display:"flex", height:"calc(100vh - 130px)", overflow:"hidden" }}>
+      <div style={{ display:"flex", height:"calc(100vh - 120px)", overflow:"hidden" }}>
 
         {/* Track sidebar */}
-        <div style={{ width: mob ? 56 : 200, flexShrink:0, background:bw ? T.surf : "rgba(0,0,0,.2)", borderRight:`1px solid ${T.border}`, overflowY:"auto" }}>
-          {TRACKS.map(tr => {
-            const tLessons = tr.modules.flatMap(m => m.lessons);
+        <div style={{ width: mob ? 52 : 190, flexShrink:0, background:bw ? T.surf : "rgba(0,0,0,.2)", borderRight:`1px solid ${T.border}`, overflowY:"auto" }}>
+          {TRACKS.map(tr2 => {
+            const tLessons = tr2.modules.flatMap(m => m.lessons);
             const tDone    = tLessons.filter(l => done[l.id]).length;
-            const active   = tr.id === trackId;
+            const active   = tr2.id === trackId;
             return (
-              <div key={tr.id} onClick={() => { setTrackId(tr.id); setModId(tr.modules[0].id); setLessonId(null); }}
+              <div key={tr2.id}
+                onClick={() => { setTrackId(tr2.id); setModId(tr2.modules[0].id); setLessonId(null); }}
+                className="card-hover"
                 style={{
                   padding: mob ? "10px 0" : "10px 12px",
-                  background: active ? (bw ? T.bg : `${tr.color}12`) : "transparent",
-                  borderLeft: `3px solid ${active ? tr.color : "transparent"}`,
-                  cursor:"pointer", transition:"all .15s", textAlign: mob ? "center" : "left"
+                  background: active ? (bw ? T.bg : `${tr2.color}12`) : "transparent",
+                  borderLeft: `3px solid ${active ? tr2.color : "transparent"}`,
+                  cursor:"pointer", textAlign: mob ? "center" : "left",
+                  transition:"background .15s, border-color .15s"
                 }}>
-                <div style={{ fontSize: mob ? 16 : 18 }}>{tr.icon}</div>
+                <div style={{ fontSize: mob ? 18 : 20, marginBottom: mob ? 0 : 2 }}>{tr2.icon}</div>
                 {!mob && (
                   <>
-                    <div style={{ fontFamily:"Georgia,serif", fontSize:11, fontWeight:600, color: active ? tr.color : T.text, marginTop:3, lineHeight:1.3 }}>{tr.name}</div>
-                    <div style={{ fontFamily:"monospace", fontSize:7, color:T.muted, marginTop:2 }}>{tDone}/{tLessons.length} done</div>
+                    <div style={{ fontFamily:"Georgia,serif", fontSize:11, fontWeight:600, color: active ? tr2.color : T.text, marginTop:3, lineHeight:1.3 }}>{tr2.name}</div>
+                    <div style={{ fontFamily:"monospace", fontSize:7, color:T.muted, marginTop:2 }}>{tDone}/{tLessons.length} {tr("lessonsDone")}</div>
+                    {/* mini progress bar */}
+                    <div style={{ height:2, background:T.borderSoft, borderRadius:1, overflow:"hidden", marginTop:4 }}>
+                      <div style={{ height:"100%", background:tr2.color, width:`${tLessons.length ? Math.round(tDone/tLessons.length*100) : 0}%`, transition:"width .4s" }} />
+                    </div>
                   </>
                 )}
               </div>
@@ -758,12 +947,12 @@ export default function DeepModules({ theme }) {
           {!lesson ? (
             <>
               {/* Track header */}
-              <div style={{ padding:"14px 16px", background: bw ? T.surf : `${track?.color}0A`, border:`1px solid ${track?.color}33`, marginBottom:14, position:"relative" }}>
+              <div className="fade-up" style={{ padding:"14px 16px", background: bw ? T.surf : `${track?.color}0A`, border:`1px solid ${track?.color}33`, marginBottom:14, position:"relative" }}>
                 <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:track?.color }} />
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                  <span style={{ fontSize:28 }}>{track?.icon}</span>
+                  <span style={{ fontSize:32 }}>{track?.icon}</span>
                   <div>
-                    <div style={{ fontFamily:"monospace", fontSize:8, color:track?.color, letterSpacing:".15em" }}>LEARNING TRACK</div>
+                    <div style={{ fontFamily:"monospace", fontSize:8, color:track?.color, letterSpacing:".15em" }}>{tr("learningTrack")}</div>
                     <div style={{ fontFamily:"Georgia,serif", fontWeight:700, fontSize:18, color:T.text }}>{track?.name}</div>
                     <div style={{ fontFamily:"Georgia,serif", fontStyle:"italic", fontSize:11, color:T.muted, marginTop:2 }}>{track?.desc}</div>
                   </div>
@@ -771,37 +960,38 @@ export default function DeepModules({ theme }) {
               </div>
 
               {/* Modules list */}
-              {track?.modules.map(mod => {
+              {track?.modules.map((mod, mi) => {
                 const mLessons = mod.lessons;
-                const mDone = mLessons.filter(l => done[l.id]).length;
+                const mDone    = mLessons.filter(l => done[l.id]).length;
                 const expanded = mod.id === modId;
                 return (
-                  <div key={mod.id} style={{ marginBottom:8 }}>
+                  <div key={mod.id} className={`fade-up s${mi}`} style={{ marginBottom:8 }}>
                     <div onClick={() => setModId(expanded ? null : mod.id)}
-                      style={{ padding:"12px 14px", background: expanded ? T.inputBg : (bw ? T.surf : "transparent"), border:`1px solid ${T.border}`, cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      style={{ padding:"12px 14px", background: expanded ? T.inputBg : (bw ? T.surf : "transparent"), border:`1px solid ${T.border}`, cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center", transition:"background .15s" }}>
                       <div>
                         <div style={{ fontFamily:"Georgia,serif", fontWeight:700, fontSize:13, color:T.text }}>{mod.title}</div>
-                        <div style={{ fontFamily:"monospace", fontSize:7, color:T.muted, marginTop:2 }}>{mLessons.length} lessons · {mDone}/{mLessons.length} complete</div>
+                        <div style={{ fontFamily:"monospace", fontSize:7, color:T.muted, marginTop:2 }}>{mLessons.length} lessons · {mDone}/{mLessons.length} {tr("lessonsDone")}</div>
                       </div>
                       <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                         <div style={{ width:40, height:3, background:T.borderSoft, borderRadius:2, overflow:"hidden" }}>
-                          <div style={{ height:"100%", background:track?.color, width:`${Math.round(mDone/mLessons.length*100)}%` }} />
+                          <div style={{ height:"100%", background:track?.color, width:`${Math.round(mDone/mLessons.length*100)}%`, transition:"width .4s" }} />
                         </div>
-                        <span style={{ color:T.muted, fontSize:10 }}>{expanded ? "▲" : "▼"}</span>
+                        <span style={{ color:T.muted, fontSize:10, transition:"transform .2s", display:"inline-block", transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
                       </div>
                     </div>
                     {expanded && (
                       <div style={{ borderLeft:`2px solid ${track?.color}40`, marginLeft:14 }}>
-                        {mLessons.map(les => (
+                        {mLessons.map((les, li) => (
                           <div key={les.id}
-                            style={{ display:"flex", gap:10, padding:"10px 14px", borderBottom:`1px solid ${T.borderSoft}`, cursor:"pointer", background: done[les.id] ? `${T.green}05` : "transparent" }}
+                            className={`card-hover fade-up s${li}`}
+                            style={{ display:"flex", gap:10, padding:"10px 14px", borderBottom:`1px solid ${T.borderSoft}`, background: done[les.id] ? `${T.green}05` : "transparent" }}
                             onClick={() => setLessonId(les.id)}>
-                            <div style={{ width:20, height:20, borderRadius:"50%", flexShrink:0, border:`2px solid ${done[les.id] ? T.green : T.border}`, background: done[les.id] ? `${T.green}18` : "transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, color:T.green }}>
+                            <div style={{ width:20, height:20, borderRadius:"50%", flexShrink:0, border:`2px solid ${done[les.id] ? T.green : T.border}`, background: done[les.id] ? `${T.green}18` : "transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, color:T.green, transition:"all .2s" }}>
                               {done[les.id] ? "✓" : ""}
                             </div>
                             <div style={{ flex:1 }}>
                               <div style={{ fontFamily:"Georgia,serif", fontSize:12, fontWeight:600, color: done[les.id] ? T.green : T.text }}>{les.title}</div>
-                              <div style={{ fontFamily:"monospace", fontSize:7, color:T.muted, marginTop:1 }}>{les.mins} min read</div>
+                              <div style={{ fontFamily:"monospace", fontSize:7, color:T.muted, marginTop:1 }}>{les.mins} {tr("minRead")} {VISUALS[les.id] ? "· 📊 diagram" : ""}</div>
                             </div>
                             <div style={{ fontFamily:"monospace", fontSize:9, color:T.muted, alignSelf:"center" }}>→</div>
                           </div>
@@ -811,19 +1001,63 @@ export default function DeepModules({ theme }) {
                   </div>
                 );
               })}
+
+              {/* Related tracks */}
+              <div style={{ marginTop:24, padding:"12px 14px", background: bw ? T.surf : T.inputBg, border:`1px solid ${T.borderSoft}` }}>
+                <div style={{ fontFamily:"monospace", fontSize:7, color:T.muted, letterSpacing:".2em", marginBottom:8 }}>RELATED TRACKS</div>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                  {TRACKS.filter(tr2 => tr2.id !== trackId).slice(0,5).map(tr2 => (
+                    <div key={tr2.id}
+                      className="btn-press"
+                      onClick={() => { setTrackId(tr2.id); setModId(tr2.modules[0].id); setLessonId(null); }}
+                      style={{ display:"flex", alignItems:"center", gap:5, padding:"5px 10px", background:`${tr2.color}10`, border:`1px solid ${tr2.color}30`, cursor:"pointer" }}>
+                      <span style={{ fontSize:12 }}>{tr2.icon}</span>
+                      <span style={{ fontFamily:"monospace", fontSize:7, color:tr2.color, letterSpacing:".07em" }}>{tr2.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </>
           ) : (
-            /* Lesson view */
-            <div>
-              <button onClick={() => setLessonId(null)}
-                style={{ fontFamily:"monospace", fontSize:8, color:T.muted, background:"transparent", border:`1px solid ${T.border}`, padding:"5px 12px", cursor:"pointer", marginBottom:14, letterSpacing:".1em" }}>
-                ← BACK TO MODULES
-              </button>
+            /* ── Lesson view ── */
+            <div className="pg-enter">
+              {/* Nav bar */}
+              <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
+                <button onClick={() => setLessonId(null)} className="btn-press"
+                  style={{ fontFamily:"monospace", fontSize:8, color:T.muted, background:"transparent", border:`1px solid ${T.border}`, padding:"5px 12px", cursor:"pointer", letterSpacing:".1em" }}>
+                  {tr("backToModules")}
+                </button>
+                <div style={{ flex:1 }} />
+                {prevLesson && (
+                  <button onClick={() => openLesson(prevLesson)} className="btn-press"
+                    style={{ fontFamily:"monospace", fontSize:8, color:T.muted, background:"transparent", border:`1px solid ${T.border}`, padding:"5px 12px", cursor:"pointer", letterSpacing:".08em", display:"flex", alignItems:"center", gap:5 }}>
+                    <span>{prevLesson.trackIcon}</span> {tr("prevLesson")}
+                  </button>
+                )}
+                {nextLesson && (
+                  <button onClick={() => openLesson(nextLesson)} className="btn-press"
+                    style={{ fontFamily:"monospace", fontSize:8, color:T.a, background:bw ? T.bg : `${T.a}10`, border:`1px solid ${T.a}40`, padding:"5px 12px", cursor:"pointer", letterSpacing:".08em", display:"flex", alignItems:"center", gap:5 }}>
+                    {tr("nextLesson")} <span>{nextLesson.trackIcon}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Lesson header */}
               <div style={{ padding:"16px 18px", background: bw ? T.surf : `${track?.color}08`, border:`1px solid ${track?.color}33`, marginBottom:16 }}>
                 <div style={{ fontFamily:"monospace", fontSize:7, color:track?.color, letterSpacing:".2em", marginBottom:4 }}>{track?.name} · {module?.title}</div>
                 <h2 style={{ fontFamily:"Georgia,serif", fontWeight:900, fontSize: mob ? 17 : 22, color:T.text, marginBottom:6 }}>{lesson?.title}</h2>
-                <div style={{ fontFamily:"monospace", fontSize:8, color:T.muted }}>{lesson?.mins} minute read</div>
+                <div style={{ fontFamily:"monospace", fontSize:8, color:T.muted }}>{lesson?.mins} {tr("minRead")} {VISUALS[lessonId] ? "· includes diagram" : ""}</div>
               </div>
+
+              {/* Diagram (if available) */}
+              {VISUALS[lessonId] && (
+                <div className="fade-up" style={{ padding:"14px 16px", background: bw ? T.surf : `${track?.color}05`, border:`1px solid ${track?.color}20`, marginBottom:16 }}>
+                  <div style={{ fontFamily:"monospace", fontSize:7, color:track?.color, letterSpacing:".2em", marginBottom:6 }}>📊 VISUAL DIAGRAM</div>
+                  {VISUALS[lessonId](track?.color)}
+                </div>
+              )}
+
+              {/* Lesson content */}
               <div style={{ padding:"0 4px", lineHeight:1.85, fontSize:13, color:T.text }}>
                 {lesson?.content.split("\n").map((line, i) => {
                   if (!line.trim()) return <div key={i} style={{ height:10 }} />;
@@ -833,21 +1067,42 @@ export default function DeepModules({ theme }) {
                     dangerouslySetInnerHTML={{ __html: line.replace(/\*\*(.+?)\*\*/g, `<strong style="color:${T.a}">$1</strong>`) }} />;
                 })}
               </div>
-              <div style={{ marginTop:24, display:"flex", gap:10 }}>
-                <button onClick={() => markDone(lessonId)}
+
+              {/* Action buttons */}
+              <div style={{ marginTop:24, display:"flex", gap:10, flexWrap:"wrap" }}>
+                <button onClick={() => markDone(lessonId)} className="btn-press"
                   style={{
                     padding:"10px 24px", fontFamily:"monospace", fontSize:9, letterSpacing:".12em",
                     background: done[lessonId] ? `${T.green}18` : T.a,
                     color: done[lessonId] ? T.green : (bw ? "#fff" : "#05050A"),
                     border: `1px solid ${done[lessonId] ? T.green : T.a}`, cursor:"pointer"
                   }}>
-                  {done[lessonId] ? "✓ MARKED COMPLETE" : "MARK COMPLETE"}
+                  {done[lessonId] ? tr("marked") : tr("markComplete")}
                 </button>
-                <button onClick={() => setLessonId(null)}
+                {nextLesson && (
+                  <button onClick={() => openLesson(nextLesson)} className="btn-press"
+                    style={{ padding:"10px 20px", fontFamily:"monospace", fontSize:9, letterSpacing:".1em", background:bw ? T.bg : `${T.a}10`, color:T.a, border:`1px solid ${T.a}40`, cursor:"pointer" }}>
+                    {tr("nextLesson")} {nextLesson.trackIcon}
+                  </button>
+                )}
+                <button onClick={() => setLessonId(null)} className="btn-press"
                   style={{ padding:"10px 20px", fontFamily:"monospace", fontSize:9, letterSpacing:".1em", background:"transparent", color:T.muted, border:`1px solid ${T.border}`, cursor:"pointer" }}>
-                  BACK
+                  {tr("back")}
                 </button>
               </div>
+
+              {/* Progress indicator */}
+              {flatIdx >= 0 && (
+                <div style={{ marginTop:20, padding:"10px 14px", background: bw ? T.surf : T.inputBg, border:`1px solid ${T.borderSoft}` }}>
+                  <div style={{ fontFamily:"monospace", fontSize:7, color:T.muted, letterSpacing:".15em", marginBottom:6 }}>
+                    LESSON {flatIdx+1} OF {ALL_LESSONS.length} · {Math.round((flatIdx+1)/ALL_LESSONS.length*100)}% THROUGH ALL MODULES
+                  </div>
+                  <div style={{ height:2, background:T.borderSoft, borderRadius:1, overflow:"hidden" }}>
+                    <div style={{ height:"100%", background:track?.color, width:`${Math.round((flatIdx+1)/ALL_LESSONS.length*100)}%`, transition:"width .4s" }} />
+                  </div>
+                </div>
+              )}
+
               <div style={{ height:40 }} />
             </div>
           )}

@@ -6,6 +6,7 @@ import TracksGrants from "./TracksGrants";
 import Calendar from "./Calendar";
 import AIAgent from "./AIAgent";
 import NFCLanding from "./NFCLanding";
+import { LANGS, getLang, setLang as saveLang, t } from "./i18n";
 
 export const THEMES = {
   gold: {
@@ -26,14 +27,7 @@ export const THEMES = {
   },
 };
 
-const TABS = [
-  { id: "platform", label: "🏠 Platform" },
-  { id: "modules",  label: "📚 Modules" },
-  { id: "certs",    label: "🏅 Certs" },
-  { id: "grants",   label: "📋 Grants" },
-  { id: "calendar", label: "🗓️ Roadmap" },
-  { id: "ai",       label: "✦ AI Agent" },
-];
+const TAB_IDS = ["platform","modules","certs","grants","calendar","ai"];
 
 const SAVE_THEME = "byt_theme_v1";
 
@@ -50,6 +44,7 @@ export default function App() {
     try { return localStorage.getItem(SAVE_THEME) || "gold"; } catch { return "gold"; }
   });
   const [showNFC,   setShowNFC]  = useState(() => isNFCScan());
+  const [lang,      setLangState]= useState(() => getLang());
 
   const T = THEMES[themeName];
 
@@ -57,6 +52,11 @@ export default function App() {
     const next = themeName === "gold" ? "bw" : "gold";
     setThemeName(next);
     try { localStorage.setItem(SAVE_THEME, next); } catch {}
+  }
+
+  function switchLang(code) {
+    setLangState(code);
+    saveLang(code);
   }
 
   function enterFromNFC() {
@@ -72,13 +72,15 @@ export default function App() {
   }
 
   const pages = {
-    platform: <Platform theme={T} setTab={setTab} />,
-    modules:  <DeepModules theme={T} />,
-    certs:    <CertHub theme={T} />,
-    grants:   <TracksGrants theme={T} />,
-    calendar: <Calendar theme={T} />,
-    ai:       <AIAgent theme={T} />,
+    platform: <Platform theme={T} setTab={setTab} lang={lang} />,
+    modules:  <DeepModules theme={T} lang={lang} />,
+    certs:    <CertHub theme={T} lang={lang} />,
+    grants:   <TracksGrants theme={T} lang={lang} />,
+    calendar: <Calendar theme={T} lang={lang} />,
+    ai:       <AIAgent theme={T} lang={lang} />,
   };
+
+  const TABS = TAB_IDS.map(id => ({ id, label: t(lang, id) }));
 
   return (
     <div style={{ background: T.bg, minHeight: "100vh", fontFamily: "Georgia,serif" }}>
@@ -120,8 +122,23 @@ export default function App() {
             )}
           </div>
 
-          <div style={{ fontFamily: "monospace", fontSize: 7, color: T.muted, letterSpacing: ".12em", display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ fontFamily: "monospace", fontSize: 7, color: T.muted, letterSpacing: ".12em", display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ display: "none" }} className="tagline">BE YE TRANSFORMED</span>
+
+            {/* Language switcher */}
+            <div style={{ display: "flex", border: `1px solid ${T.border}`, overflow: "hidden" }}>
+              {LANGS.map(l => (
+                <button key={l.code} onClick={() => switchLang(l.code)} style={{
+                  background: lang === l.code ? T.a : "transparent",
+                  border: "none", borderRight: l.code !== LANGS[LANGS.length-1].code ? `1px solid ${T.border}` : "none",
+                  color: lang === l.code ? (themeName === "bw" ? "#fff" : "#05050A") : T.muted,
+                  fontFamily: "monospace", fontSize: 7, letterSpacing: ".1em",
+                  padding: "4px 8px", cursor: "pointer", fontWeight: lang === l.code ? 900 : 400,
+                  transition: "all .15s"
+                }}>{l.label}</button>
+              ))}
+            </div>
+
             {/* NFC preview trigger */}
             <button onClick={() => setShowNFC(true)} style={{
               background: "transparent", border: `1px solid ${T.borderSoft}`,
